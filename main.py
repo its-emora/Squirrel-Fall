@@ -66,10 +66,10 @@ class PLAYER(pygame.sprite.Sprite):
         self.multiplier = 0
 
         if keys[pygame.K_d]:
-            self.multiplier += 1 
+            self.multiplier += 0.5 
             self.image = load("assets/images/player/player_facing_right.png")
         if keys[pygame.K_a]:
-            self.multiplier -= 1
+            self.multiplier -= 0.5
             self.image = load("assets/images/player/player_facing_left.png")
 
         self.acceleration.x = self.HORIZONTAL_ACCELERATION * self.multiplier
