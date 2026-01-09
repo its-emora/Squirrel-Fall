@@ -152,7 +152,7 @@ while running:
     player_group.update(delta_time)
     player_group.draw(root)
 
-    #main_tile_group.update()
+    main_tile_group.update()
     main_tile_group.draw(root)
 
     pygame.display.flip()       # Flipping the display.
