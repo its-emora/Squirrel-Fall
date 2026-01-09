@@ -44,13 +44,16 @@ pygame.display.set_caption(GAME_NAME)       # Setting the window caption to the 
 # ---- PLAYER CLASS
 class PLAYER(pygame.sprite.Sprite):
     # Initialising the player.
-    def __init__(self,x,y):
+    def __init__(self,x,y,collision_tiles):
         super().__init__()
 
         # Image variables
         self.image = load("assets/images/player/player_facing_right.png")
         self.rect = self.image.get_rect()
         self.rect.center = (x,y)
+
+        # Define collision tiles
+        self.collision_tiles = collision_tiles
 
         # Kinematic variables
         self.multiplier = 0
@@ -121,16 +124,14 @@ class TILE(pygame.sprite.Sprite):
         
 
 
-# ---- MAKING THE PLAYER ---- #
-player = PLAYER(960,540)
-player_group.add(player)
-
-
 # ---- MAKING THE MAP ---- #
 for row in range(len(map)):
     for col in range(len(map[row])):
         if map[row][col] == 1:
             tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,dirt_tile_group)
+        if map[row][col] == 9:
+            player = PLAYER(col*TILE_SIZE,row*TILE_SIZE,dirt_tile_group)
+            player_group.add(player)
 
 
 
@@ -147,7 +148,7 @@ while running:
     keys = pygame.key.get_pressed()     # Gettinmg the keys that the user has pressed.
 
     delta_time = clock.tick(60)/100     # Declaring delta time.
-    root.fill(BLACK)        # Resetting the window to allow a new frame to be drawn.
+    root.fill(GREY)        # Resetting the window to allow a new frame to be drawn.
 
     player_group.update(delta_time)
     player_group.draw(root)
