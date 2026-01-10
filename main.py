@@ -52,7 +52,7 @@ class PLAYER(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x,y)
 
-        # Define collision tiles
+        # Collision tiles.
         self.collision_tiles = collision_tiles
 
         # Kinematic variables
@@ -64,11 +64,11 @@ class PLAYER(pygame.sprite.Sprite):
         # Physics/kinematic constants
         self.HORIZONTAL_ACCELERATION = 2        # The acceleration of the player when moving left and right.
         self.FRICTION_COEFFICIENT = 0.1     # The coefficient of friction of the player.
-        self.GRAVITATIONAL_CONSTANT = 0.5       # The amount that gravity pulls down the player.
+        self.GRAVITY = 0.2
 
     # Updating the player.
     def update(self,dt):
-        self.acceleration = vector(0,0)     # Reseting the acceleration to fix bouncing bug.
+        self.acceleration = vector(0,self.GRAVITY)     # Reseting the acceleration to fix bouncing bug.
         self.multiplier = 0     # Multiplier for velocity. This is so that if you press both A and D, you do not move.
 
         if keys[pygame.K_d]:
@@ -77,6 +77,9 @@ class PLAYER(pygame.sprite.Sprite):
         if keys[pygame.K_a]:
             self.multiplier -= 1        # Negative multiplier to decrease y value.
             self.image = load("assets/images/player/player_facing_left.png")        # Loading the facing left image.
+        if keys[pygame.K_SPACE]:
+            if self.velocity.y > -1:
+                self.acceleration.y = -1 * self.GRAVITY
 
         # Kinematic movement equations.
         self.acceleration.x = self.HORIZONTAL_ACCELERATION * self.multiplier
@@ -87,15 +90,23 @@ class PLAYER(pygame.sprite.Sprite):
 
         # Checking if the squirrel is off the screen.
         if self.position.x > 2000:
-            self.position.x = -100
+            self.position.x = -100      # Putting the player off the screen on the far left.
         if self.position.x < -100:
-            self.position.x = 2000
+            self.position.x = 2000      # Putting the player off the screen on the far right.
 
         self.rect.center = self.position        # Setting the new position
 
+        # Checking if player collides with map.
+        touched_tiles = pygame.sprite.spritecollide(self,self.collision_tiles,False)
+        if touched_tiles:
+            self.position.y = touched_tiles[0].rect.top - 45
+            self.velocity.y = 0
+
+
 # ---- TILE CLASS
 class TILE(pygame.sprite.Sprite):
-    def __init__(self,x,y,tile_int,main_group,sub_group):
+    # Initialising the map.
+    def __init__(self,x,y,tile_int,main_group,sub_group,player_group):
         super().__init__()
 
         if tile_int == 1:
@@ -107,15 +118,22 @@ class TILE(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.topleft = (x,y)
 
+        self.player_group = player_group
+
         self.position = vector(x,y)
 
         self.velocity = vector(0,0)
         self.acceleration = vector(0,0)
-        self.GRAVITY = 0.1
+        self.GRAVITY = 0.05
 
     
     def update(self):
-        self.acceleration = vector(0,self.GRAVITY)
+        keys = pygame.key.get_pressed()
+        
+        if self.velocity.y <= -5:
+            self.acceleration.y = 0
+        else:
+            self.acceleration = vector(0,self.GRAVITY)
 
         self.velocity -= self.acceleration
         self.position += self.velocity + self.acceleration / 2
@@ -123,16 +141,14 @@ class TILE(pygame.sprite.Sprite):
         self.rect.topleft = self.position
         
 
-
 # ---- MAKING THE MAP ---- #
 for row in range(len(map)):
     for col in range(len(map[row])):
         if map[row][col] == 1:
-            tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,dirt_tile_group)
+            tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,dirt_tile_group,player_group)
         if map[row][col] == 9:
             player = PLAYER(col*TILE_SIZE,row*TILE_SIZE,dirt_tile_group)
             player_group.add(player)
-
 
 
 # ---- GAME LOOP ---- #
@@ -150,11 +166,11 @@ while running:
     delta_time = clock.tick(60)/100     # Declaring delta time.
     root.fill(GREY)        # Resetting the window to allow a new frame to be drawn.
 
-    player_group.update(delta_time)
-    player_group.draw(root)
+    player_group.update(delta_time)     # Updating the player class.
+    player_group.draw(root)     # Drawing the player.
 
-    main_tile_group.update()
-    main_tile_group.draw(root)
+    main_tile_group.update()        # Updating the tilemap
+    main_tile_group.draw(root)      # Drawing the tilemap.
 
     pygame.display.flip()       # Flipping the display.
 
