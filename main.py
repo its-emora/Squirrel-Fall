@@ -144,7 +144,7 @@ class TILE(pygame.sprite.Sprite):
 
         self.velocity = vector(0,0)
         self.acceleration = vector(0,0)
-        self.GRAVITY = 0.05
+        self.GRAVITY = 0.1
 
     
     def update(self):
@@ -154,6 +154,10 @@ class TILE(pygame.sprite.Sprite):
             self.acceleration.y = 0
         else:
             self.acceleration = vector(0,self.GRAVITY)
+
+        if keys[pygame.K_SPACE]:
+            if self.velocity.y > 1.5:      # Giving a limit to how fast the glide can be.
+                self.acceleration.y = self.GRAVITY     # Decelerating at the same rate as gravity.
 
         self.velocity -= self.acceleration
         self.position += self.velocity + self.acceleration / 2

@@ -37,6 +37,11 @@ while running:
     if keys[pygame.K_t]:
         tile_type = 9
 
+    if keys[pygame.K_LCTRL] and keys[pygame.K_r]:
+        for row in range(len(map)):
+            for col in range(len(map[row])):
+                map[row][col] = 0 
+
     for row in range(len(map)):
         for col in range(len(map[row])):
             pygame.draw.rect(root,BLACK,(col*TILE_SIZE,row*TILE_SIZE+map_y,TILE_SIZE, TILE_SIZE),1)
