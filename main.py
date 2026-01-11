@@ -55,10 +55,11 @@ class PLAYER(pygame.sprite.Sprite):
 
         # Collision tiles.
         self.collision_tiles = collision_tiles
+        self.on_platform = False
 
         # Kinematic variables
         self.multiplier = 0
-        self.last_y = y
+        self.has_jump = True
         self.position = vector(x,y)     # Position vector.
         self.velocity = vector(0,0)     # Velocity vector.
         self.acceleration = vector(0,0)     # Acceleration vector.
@@ -66,13 +67,15 @@ class PLAYER(pygame.sprite.Sprite):
         # Physics/kinematic constants
         self.HORIZONTAL_ACCELERATION = 2        # The acceleration of the player when moving left and right.
         self.FRICTION_COEFFICIENT = 0.1     # The coefficient of friction of the player.
-        self.GRAVITY = 0.2
+        self.GRAVITY = 0.2      # How much gravity effects the player.
 
     # Updating the player.
     def update(self):
-        self.acceleration = vector(0,self.GRAVITY)     # Reseting the acceleration to fix bouncing bug.
+        if self.velocity.y <= 7:
+            self.acceleration = vector(0,self.GRAVITY)     # Reseting the acceleration to fix bouncing bug.
+        else:
+            self.acceleration = vector(0,0)
         self.multiplier = 0     # Multiplier for velocity. This is so that if you press both A and D, you do not move.
-
 
         if keys[pygame.K_d]:
             self.multiplier += 1        # Positive multiplier to increase x value.
@@ -81,8 +84,12 @@ class PLAYER(pygame.sprite.Sprite):
             self.multiplier -= 1        # Negative multiplier to decrease y value.
             self.image = load("assets/images/player/player_facing_left.png")        # Loading the facing left image.
         if keys[pygame.K_SPACE]:
-            if self.velocity.y > -1.5:
-                self.acceleration.y = -1 * self.GRAVITY
+            if self.velocity.y > -1.5:      # Giving a limit to how fast the glide can be.
+                self.acceleration.y = -1 * self.GRAVITY     # Decelerating at the same rate as gravity.
+        if keys[pygame.K_w]:
+            if self.has_jump:
+                self.velocity.y = -10
+
 
         # Kinematic movement equations.
         self.acceleration.x = self.HORIZONTAL_ACCELERATION * self.multiplier
@@ -94,20 +101,23 @@ class PLAYER(pygame.sprite.Sprite):
         # Checking if the squirrel is off the screen.
         if self.position.x > 2000:
             self.position.x = -100      # Putting the player off the screen on the far left.
-            self.position.y -= 50
+            self.position.y -= 50       # To allow for smoother movement.
         if self.position.x < -100:
-            self.position.x = 2000      # Putting the player off the screen on the far right.
-            self.position.y -= 50
+            self.position.x = 2000     # Putting the player off the screen on the far right.
+            self.position.y -= 50       # To allow for smoother transportation.
 
         self.rect.bottomright = self.position        # Setting the new position
 
         # Checking if player collides with map.
-        touched_tiles = pygame.sprite.spritecollide(self,self.collision_tiles,False) 
+        touched_tiles = pygame.sprite.spritecollide(self,self.collision_tiles,False)        # Making a list of all tiles that are touching the player.
 
         if touched_tiles:
-            if self.rect.bottom - 10 < touched_tiles[0].rect.top:
+            if self.rect.bottom - 15 < touched_tiles[0].rect.top:       # Checking if the player came from above the tile.
+                self.has_jump = True
                 self.position.y = touched_tiles[0].rect.top 
                 self.velocity.y = 0
+        else:
+            self.has_jump = False
 
 
 # ---- TILE CLASS
