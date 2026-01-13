@@ -22,8 +22,10 @@ GAME_NAME = "Squirrel Fall"     # The game title.
 # Integers
 TILE_SIZE = 64
 SCREEN_WIDTH,SCREEN_HEIGHT = 1920,1080
+SCREEN_CENTER = (SCREEN_WIDTH/2,SCREEN_HEIGHT/2)
 # Booleans
 running = True      # Whether the main game loop should run or not.
+start_menu = True
 # Miscellaneous
 vector = pygame.math.Vector2        # Standardising vectors so I needn't retype "pygame.math.Vector2" each time I declare a vector.
 load = pygame.image.load
@@ -32,8 +34,11 @@ map = map.map       # The tilemap.
 # Sprite groups
 player_group = pygame.sprite.Group()
 main_tile_group = pygame.sprite.Group()
-dirt_tile_group = pygame.sprite.Group()
-wall_tile_group = pygame.sprite.Group()
+wood_tile_group = pygame.sprite.Group()
+coin_tile_group = pygame.sprite.Group()
+acorn_tile_group = pygame.sprite.Group()
+# Images
+menu_background = load("assets/images/backgrounds/menu.png")
 
 
 # ---- SETTING UP THE GAME WINDOW ---- #
@@ -41,11 +46,17 @@ root = pygame.display.set_mode((0,0), pygame.FULLSCREEN)        # Making the gam
 pygame.display.set_caption(GAME_NAME)       # Setting the window caption to the game name.
 
 
+# ---- SUBROUTINES ---- #
+# ---- START MENU 
+def startup_menu():
+    root.blit(menu_background,(SCREEN_WIDTH/2 - 1120/2,SCREEN_HEIGHT/2 - 1120/2))
+
+
 # ---- CLASSES ---- #
 # ---- PLAYER CLASS
 class PLAYER(pygame.sprite.Sprite):
     # Initialising the player.
-    def __init__(self,x,y,collision_tiles):
+    def __init__(self,x,y,collision_tiles,coin_tiles):
         super().__init__()
 
         # Image variables
@@ -53,7 +64,11 @@ class PLAYER(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.bottomleft = (x,y)
 
+        # Stats.
+        self.coins = 0
+
         # Collision tiles.
+        self.coin_tiles = coin_tiles
         self.collision_tiles = collision_tiles
         self.on_platform = False
 
@@ -71,7 +86,7 @@ class PLAYER(pygame.sprite.Sprite):
 
     # Updating the player.
     def update(self):
-        if self.velocity.y <= 7:
+        if self.velocity.y <= 10:
             self.acceleration = vector(0,self.GRAVITY)     # Reseting the acceleration to fix bouncing bug.
         else:
             self.acceleration = vector(0,0)
@@ -112,12 +127,13 @@ class PLAYER(pygame.sprite.Sprite):
         touched_tiles = pygame.sprite.spritecollide(self,self.collision_tiles,False)        # Making a list of all tiles that are touching the player.
 
         if touched_tiles:
-            if self.rect.bottom - 15 < touched_tiles[0].rect.top:       # Checking if the player came from above the tile.
+            if self.rect.bottom - 20 < touched_tiles[0].rect.top:       # Checking if the player came from above the tile.
                 self.has_jump = True
                 self.position.y = touched_tiles[0].rect.top 
                 self.velocity.y = 0
         else:
             self.has_jump = False
+
 
 
 # ---- TILE CLASS
@@ -127,13 +143,20 @@ class TILE(pygame.sprite.Sprite):
         super().__init__()
 
         if tile_int == 1:
-            self.image = load("assets/images/tiles/tile_dirt_texture.png")
+            self.image = load("assets/images/tiles/wood_texture.png")
             sub_group.add(self)
         if tile_int == 2:
-            self.image = load("assets/images/tiles/tile_dirt_texture.png")
+            self.image = load("assets/images/tiles/tile_coin.png")
+            self.image = pygame.transform.scale(self.image,(32,32))
+            sub_group.add(self)
+        if tile_int == 3:
+            self.image = load("assets/images/tiles/tile_acorn.png")
+            self.image = pygame.transform.scale(self.image,(100,100))
             sub_group.add(self)
         
         main_group.add(self)
+
+        self.tile_int = tile_int
 
         self.rect = self.image.get_rect()
         self.rect.topleft = (x,y)
@@ -141,13 +164,17 @@ class TILE(pygame.sprite.Sprite):
         self.player_group = player_group
 
         self.position = vector(x,y)
+        if self.tile_int == 2:
+            self.position += vector(16,8)
+        if self.tile_int == 3:
+            self.position -= vector(18,20)
 
         self.velocity = vector(0,0)
         self.acceleration = vector(0,0)
         self.GRAVITY = 0.1
 
     
-    def update(self):
+    def update(self,main_tile_group,coin_tile_group):
         keys = pygame.key.get_pressed()
 
         if self.velocity.y <= -5:
@@ -156,24 +183,32 @@ class TILE(pygame.sprite.Sprite):
             self.acceleration = vector(0,self.GRAVITY)
 
         if keys[pygame.K_SPACE]:
-            if self.velocity.y > 1.5:      # Giving a limit to how fast the glide can be.
+            if self.velocity.y > 7.5:      # Giving a limit to how fast the glide can be.
                 self.acceleration.y = self.GRAVITY     # Decelerating at the same rate as gravity.
 
         self.velocity -= self.acceleration
         self.position += self.velocity + self.acceleration / 2
-
+        
         self.rect.topleft = self.position
+
+        if self.tile_int == 2:
+            if pygame.sprite.spritecollide(self,self.player_group,False):
+                coin_tile_group.remove(self)
+                main_tile_group.remove(self)
+                player.coins += 1
        
 
 # ---- MAKING THE MAP ---- #
 for row in range(len(map)):
     for col in range(len(map[row])):
         if map[row][col] == 1:
-            tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,dirt_tile_group,player_group)
+            tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,wood_tile_group,player_group)
         if map[row][col] == 2:
-            tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,wall_tile_group,player_group)
+            tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,coin_tile_group,player_group)
+        if map[row][col] == 3:
+            tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,acorn_tile_group,player_group)
         if map[row][col] == 9:
-            player = PLAYER(col*TILE_SIZE,row*TILE_SIZE,dirt_tile_group)
+            player = PLAYER(col*TILE_SIZE,row*TILE_SIZE,wood_tile_group,coin_tile_group)
             player_group.add(player)
 
 
@@ -186,18 +221,24 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:        # If the user presses the escape key.
                 running = False
-
+  
     keys = pygame.key.get_pressed()     # Gettinmg the keys that the user has pressed.
 
-    delta_time = clock.tick(60)/100     # Declaring delta time.
-    root.fill(GREY)        # Resetting the window to allow a new frame to be drawn.
+    if start_menu:
+        startup_menu()
+        if keys[pygame.K_p]:
+            start_menu = False
+    else:
+        delta_time = clock.tick(60)/100     # Declaring delta time.
+        root.fill(GREY)        # Resetting the window to allow a new frame to be drawn.
 
-    main_tile_group.update()        # Updating the tilemap
-    main_tile_group.draw(root)      # Drawing the tilemap.
+        main_tile_group.update(main_tile_group,coin_tile_group)        # Updating the tilemap
+        main_tile_group.draw(root)      # Drawing the tilemap.
 
-    player_group.update()     # Updating the player class.
-    player_group.draw(root)     # Drawing the player.
+        player_group.update()     # Updating the player class.
+        player_group.draw(root)     # Drawing the player.
 
     pygame.display.flip()       # Flipping the display.
 
 pygame.quit()       # Closing the window.
+print(player.coins)

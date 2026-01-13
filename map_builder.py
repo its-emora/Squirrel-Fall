@@ -4,16 +4,34 @@ import map
 
 map = map.map
 
+pygame.init()
+
 BLACK = (0,0,0)
 BLUE = (0,0,255)
 WHITE = (255,255,255)
+GOLD = (255,215,0)
+BROWN = (150,75,0)
 TILE_SIZE = 64
 TILES_PER_ROW = 30
 map_y = 0
 tile_type = 1
 
-pygame.init()
+font = pygame.font.Font("assets/fonts/menu_font.ttf",30)
+coin = pygame.image.load("assets/images/tiles/tile_coin.png")
+
+
 root = pygame.display.set_mode((0,0),pygame.FULLSCREEN)
+
+def info_text(coin_count,spawns_count,platforms_count):
+    coin_text_string = f"Coins: {coin_count}"
+    coin_text = font.render(coin_text_string,True,(100,100,100))
+    pygame.draw.rect(root,BLACK,(0,0,len(coin_text_string)*15.5,30))
+    root.blit(coin_text,(0,0))
+
+    spawns_text_string = f"Spawns: {spawns_count}/1"
+    spawns_text = font.render(spawns_text_string,True,(100,100,100))
+    pygame.draw.rect(root,BLACK,(0,30,len(spawns_text_string)*16,34))
+    root.blit(spawns_text,(0,32))
 
 running = True
 while running:
@@ -28,14 +46,24 @@ while running:
     mouse_pos = pygame.mouse.get_pos()
     mouse_pressed = pygame.mouse.get_pressed()
 
+    coin_count = 0
+    platforms_count = 0
+    spawns_count = 0
+    acorn_count = 0
+
     root.fill(WHITE)
 
-    if keys[pygame.K_q]:
-        tile_type = 1
     if keys[pygame.K_e]:
         tile_type = 0
+    if keys[pygame.K_q]:
+        tile_type = 1
+    if keys[pygame.K_c]:
+        tile_type = 2
+    if keys[pygame.K_x]:
+        tile_type = 3
     if keys[pygame.K_t]:
         tile_type = 9
+    
 
     if keys[pygame.K_LCTRL] and keys[pygame.K_r]:
         for row in range(len(map)):
@@ -44,12 +72,20 @@ while running:
 
     for row in range(len(map)):
         for col in range(len(map[row])):
-            pygame.draw.rect(root,BLACK,(col*TILE_SIZE,row*TILE_SIZE+map_y,TILE_SIZE, TILE_SIZE),1)
             if map[row][col] == 1:
                 pygame.draw.rect(root,BLACK,(col*TILE_SIZE,row*TILE_SIZE+map_y,TILE_SIZE, TILE_SIZE))
+                platforms_count += 1
+            if map[row][col] == 2:
+                pygame.draw.rect(root,GOLD,(col*TILE_SIZE,row*TILE_SIZE+map_y,TILE_SIZE, TILE_SIZE))
+                coin_count += 1
+            if map[row][col] == 3:
+                pygame.draw.rect(root,BROWN,(col*TILE_SIZE,row*TILE_SIZE+map_y,TILE_SIZE, TILE_SIZE))
+                acorn_count += 1
             if map[row][col] == 9:
                 pygame.draw.rect(root,BLUE,(col*TILE_SIZE,row*TILE_SIZE+map_y,TILE_SIZE, TILE_SIZE))
+                spawns_count += 1
                 spawn_placed = True
+            pygame.draw.rect(root,BLACK,(col*TILE_SIZE,row*TILE_SIZE+map_y,TILE_SIZE, TILE_SIZE),1)
 
     if mouse_pressed[0]:
         mouse_y_location = mouse_pos[1] - map_y
@@ -72,7 +108,8 @@ while running:
         if map_y < 0:
             map_y += 20
 
-    
+    info_text(coin_count,spawns_count,platforms_count)
+
     spawn_placed = False
 
     pygame.display.flip()
@@ -88,4 +125,4 @@ for row in range(400):
 
 map_string += "]"
 file.write(map_string)
-file.close()    
+file.close()
