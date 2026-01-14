@@ -17,12 +17,16 @@ WHITE = (255,255,255)
 RED = (255,0,0)
 GREEN = (0,255,0)
 BLUE = (0,0,255)
+GOLD = (255,215,0)
+BROWN = (150,75,0)
 # Strings
 GAME_NAME = "Squirrel Fall"     # The game title.
 # Integers
 TILE_SIZE = 64
 SCREEN_WIDTH,SCREEN_HEIGHT = 1920,1080
 SCREEN_CENTER = (SCREEN_WIDTH/2,SCREEN_HEIGHT/2)
+total_coins = 0
+total_acorns = 0
 # Booleans
 running = True      # Whether the main game loop should run or not.
 start_menu = True
@@ -39,6 +43,10 @@ coin_tile_group = pygame.sprite.Group()
 acorn_tile_group = pygame.sprite.Group()
 # Images
 menu_background = load("assets/images/backgrounds/menu.png")
+# Fonts
+title_font = pygame.font.Font("assets/fonts/menu_font.ttf",60)
+title_font.set_underline(True)
+menu_font = pygame.font.Font("assets/fonts/menu_font.ttf",30)
 
 
 # ---- SETTING UP THE GAME WINDOW ---- #
@@ -50,6 +58,32 @@ pygame.display.set_caption(GAME_NAME)       # Setting the window caption to the 
 # ---- START MENU 
 def startup_menu():
     root.blit(menu_background,(SCREEN_WIDTH/2 - 1120/2,SCREEN_HEIGHT/2 - 1120/2))
+
+    title_text = title_font.render(GAME_NAME,True,BLACK)
+    title_rect = title_text.get_rect()
+    root.blit(title_text,(SCREEN_WIDTH/2-30*6,300))
+
+
+def draw_stats(total_coins,player_coins,total_acorns,player_acorns):
+    global WHITE,BLACK,GOLD,BROWN
+
+    if player_coins == total_coins:
+        coins_text_colour = GOLD
+    else:
+        coins_text_colour = WHITE
+    coins_text_string = f"Coins: {player_coins}/{total_coins}"
+    coins_text = menu_font.render(coins_text_string,True,coins_text_colour)
+    pygame.draw.rect(root,BLACK,(0,0,len(coins_text_string)*16,34))
+    root.blit(coins_text,(0,2))
+
+    if player_acorns == total_acorns:
+        acorns_text_colour  = BROWN
+    else:
+        acorns_text_colour = WHITE
+    acorns_text_string = f"Acorns: {player_acorns}/{total_acorns}"
+    acorns_text = menu_font.render(acorns_text_string,True,acorns_text_colour)
+    pygame.draw.rect(root,BLACK,(0,34,len(acorns_text_string)*16,34))
+    root.blit(acorns_text,(0,36))
 
 
 # ---- CLASSES ---- #
@@ -66,6 +100,7 @@ class PLAYER(pygame.sprite.Sprite):
 
         # Stats.
         self.coins = 0
+        self.acorns = 0
 
         # Collision tiles.
         self.coin_tiles = coin_tiles
@@ -103,7 +138,7 @@ class PLAYER(pygame.sprite.Sprite):
                 self.acceleration.y = -1 * self.GRAVITY     # Decelerating at the same rate as gravity.
         if keys[pygame.K_w]:
             if self.has_jump:
-                self.velocity.y = -10
+                self.velocity.y = -8
 
 
         # Kinematic movement equations.
@@ -114,7 +149,7 @@ class PLAYER(pygame.sprite.Sprite):
         self.position += self.velocity + self.acceleration / 2
 
         # Checking if the squirrel is off the screen.
-        if self.position.x > 2000:
+        if self.position.x > 1920+145:
             self.position.x = -100      # Putting the player off the screen on the far left.
             self.position.y -= 50       # To allow for smoother movement.
         if self.position.x < -100:
@@ -197,6 +232,12 @@ class TILE(pygame.sprite.Sprite):
                 main_tile_group.remove(self)
                 player.coins += 1
        
+        if self.tile_int == 3:
+            if pygame.sprite.spritecollide(self,self.player_group,False):
+                acorn_tile_group.remove(self)
+                main_tile_group.remove(self)
+                player.acorns += 1
+
 
 # ---- MAKING THE MAP ---- #
 for row in range(len(map)):
@@ -205,8 +246,10 @@ for row in range(len(map)):
             tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,wood_tile_group,player_group)
         if map[row][col] == 2:
             tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,coin_tile_group,player_group)
+            total_coins += 1
         if map[row][col] == 3:
             tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,acorn_tile_group,player_group)
+            total_acorns += 1
         if map[row][col] == 9:
             player = PLAYER(col*TILE_SIZE,row*TILE_SIZE,wood_tile_group,coin_tile_group)
             player_group.add(player)
@@ -223,6 +266,7 @@ while running:
                 running = False
   
     keys = pygame.key.get_pressed()     # Gettinmg the keys that the user has pressed.
+    root.fill(GREY)        # Resetting the window to allow a new frame to be drawn.
 
     if start_menu:
         startup_menu()
@@ -230,7 +274,6 @@ while running:
             start_menu = False
     else:
         delta_time = clock.tick(60)/100     # Declaring delta time.
-        root.fill(GREY)        # Resetting the window to allow a new frame to be drawn.
 
         main_tile_group.update(main_tile_group,coin_tile_group)        # Updating the tilemap
         main_tile_group.draw(root)      # Drawing the tilemap.
@@ -238,7 +281,10 @@ while running:
         player_group.update()     # Updating the player class.
         player_group.draw(root)     # Drawing the player.
 
+        draw_stats(total_coins,player.coins,total_acorns,player.acorns)
+
     pygame.display.flip()       # Flipping the display.
 
 pygame.quit()       # Closing the window.
 print(player.coins)
+print(player.acorns)

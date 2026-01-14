@@ -17,21 +17,28 @@ map_y = 0
 tile_type = 1
 
 font = pygame.font.Font("assets/fonts/menu_font.ttf",30)
-coin = pygame.image.load("assets/images/tiles/tile_coin.png")
-
 
 root = pygame.display.set_mode((0,0),pygame.FULLSCREEN)
 
 def info_text(coin_count,spawns_count,platforms_count):
     coin_text_string = f"Coins: {coin_count}"
     coin_text = font.render(coin_text_string,True,(100,100,100))
-    pygame.draw.rect(root,BLACK,(0,0,len(coin_text_string)*15.5,30))
-    root.blit(coin_text,(0,0))
+    pygame.draw.rect(root,BLACK,(0,0,len(coin_text_string)*15.5,34))
+    root.blit(coin_text,(0,2))
 
+    if spawns_count == 1:
+        spawns_colour = BLUE
+    else:
+        spawns_colour = (100,100,100)
     spawns_text_string = f"Spawns: {spawns_count}/1"
-    spawns_text = font.render(spawns_text_string,True,(100,100,100))
-    pygame.draw.rect(root,BLACK,(0,30,len(spawns_text_string)*16,34))
-    root.blit(spawns_text,(0,32))
+    spawns_text = font.render(spawns_text_string,True,spawns_colour)
+    pygame.draw.rect(root,BLACK,(0,34,len(spawns_text_string)*16,34))
+    root.blit(spawns_text,(0,36))
+
+    acorns_text_string = f"Acorns: {acorn_count}"
+    acorns_text = font.render(acorns_text_string,True,(100,100,100))
+    pygame.draw.rect(root,BLACK,(0,68,len(acorns_text_string)*16,34))
+    root.blit(acorns_text,(0,70))
 
 running = True
 while running:
@@ -101,10 +108,10 @@ while running:
         else:
             map[tile_y][tile_x] = tile_type
         
-    if keys[pygame.K_s]:
+    if keys[pygame.K_s] or keys[pygame.K_DOWN]:
         if map_y > -400 * TILE_SIZE + 1080:
             map_y -= 20
-    if keys[pygame.K_w]:
+    if keys[pygame.K_w] or keys[pygame.K_UP]:
         if map_y < 0:
             map_y += 20
 
