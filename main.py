@@ -31,6 +31,7 @@ frame_count = 0
 # Booleans
 running = True      # Whether the main game loop should run or not.
 start_menu = True       # Whether ther start_menu should display.
+finish_menu = False
 # Miscellaneous
 vector = pygame.math.Vector2        # Standardising vectors so I needn't retype "pygame.math.Vector2" each time I declare a vector.
 load = pygame.image.load        # Standardising loading so I needn't retype "pygame.image.load" every time I wish to load an image.
@@ -42,7 +43,7 @@ main_tile_group = pygame.sprite.Group()
 wood_tile_group = pygame.sprite.Group()
 coin_tile_group = pygame.sprite.Group()
 acorn_tile_group = pygame.sprite.Group()
-origin_tile_group = pygame.sprite.Group()
+finish_tile_group = pygame.sprite.Group()
 # Images
 menu_background = load("assets/images/backgrounds/full_logo.png")        # The menu bacground (scroll looking thing).
 # Fonts
@@ -199,25 +200,23 @@ class PLAYER(pygame.sprite.Sprite):
 # ---- TILE CLASS
 class TILE(pygame.sprite.Sprite):
     # Initialising the map.
-    def __init__(self,map,x,y,tile_int,main_group,sub_group,player_group,origin_group):
+    def __init__(self,map,x,y,tile_int,main_group,sub_group,player_group):
         super().__init__()
-
-        global original_tile_group
 
         if tile_int == 1:       # If the tile is a platform.
             self.image = load("assets/images/tiles/wood_texture.png")       # Loading the platform image.
             sub_group.add(self)
-            origin_group.add(self)
         if tile_int == 2:       # If the tile is a coin.
             self.image = load("assets/images/tiles/tile_coin.png")      # Loading the coin image.
             self.image = pygame.transform.scale(self.image,(32,32))
             sub_group.add(self)
-            origin_group.add(self)
         if tile_int == 3:       # If the tile is an acorn.
             self.image = load("assets/images/tiles/tile_acorn.png")     # Loading the acorn image.
             self.image = pygame.transform.scale(self.image,(100,100))
             sub_group.add(self)
-            origin_group.add(self)
+        if tile_int == 8:
+            self.image = load("assets/images/tiles/tile_finish_texture.png")
+            sub_group.add(self)
         
         main_group.add(self)        # Adding all tiles to the main group.
 
@@ -241,7 +240,9 @@ class TILE(pygame.sprite.Sprite):
         self.GRAVITY = 0.1
 
     
-    def update(self,main_tile_group,origin_group):
+    def update(self,main_tile_group):
+        global finish_menu
+
         keys = pygame.key.get_pressed()
 
         if self.velocity.y <= -5:
@@ -261,14 +262,16 @@ class TILE(pygame.sprite.Sprite):
         if self.tile_int == 2:
             if pygame.sprite.spritecollide(self,self.player_group,False):
                 main_tile_group.remove(self)
-                origin_group.add(self)
                 player.coins += 1
        
         if self.tile_int == 3:
             if pygame.sprite.spritecollide(self,self.player_group,False):
                 main_tile_group.remove(self)
-                origin_group.add(self)
                 player.acorns += 1
+
+        if self.tile_int == 8:
+            if pygame.sprite.spritecollide(self,self.player_group,False)
+                finish_menu = True
 
         if player.dead:
             self.reset()
@@ -292,13 +295,15 @@ class TILE(pygame.sprite.Sprite):
 for row in range(len(map)):
     for col in range(len(map[row])):
         if map[row][col] == 1:
-            tile = TILE(map,col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,wood_tile_group,player_group,origin_tile_group)
+            tile = TILE(map,col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,wood_tile_group,player_group)
         if map[row][col] == 2:
-            tile = TILE(map,col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,coin_tile_group,player_group,origin_tile_group)
+            tile = TILE(map,col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,coin_tile_group,player_group)
             total_coins += 1
         if map[row][col] == 3:
-            tile = TILE(map,col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,acorn_tile_group,player_group,origin_tile_group)
+            tile = TILE(map,col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,acorn_tile_group,player_group)
             total_acorns += 1
+        if map[row][col] == 8:
+            tile = TILE(map,col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,finish_tile_group,player_group)
         if map[row][col] == 9:
             player = PLAYER(col*TILE_SIZE,row*TILE_SIZE,wood_tile_group,coin_tile_group)
             player_group.add(player)
@@ -321,10 +326,12 @@ while running:
         startup_menu()
         if keys[pygame.K_p]:
             start_menu = False
+    elif finish_menu:
+        pass
     else:
         delta_time = clock.tick(60)/100     # Declaring delta time.
 
-        main_tile_group.update(main_tile_group,origin_tile_group)        # Updating the tilemap
+        main_tile_group.update(main_tile_group)        # Updating the tilemap
         main_tile_group.draw(root)      # Drawing the tilemap.
 
         player_group.update()     # Updating the player class.
