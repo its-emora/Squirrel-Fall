@@ -22,31 +22,33 @@ BROWN = (150,75,0)
 # Strings
 GAME_NAME = "Squirrel Fall"     # The game title.
 # Integers
-TILE_SIZE = 64
-SCREEN_WIDTH,SCREEN_HEIGHT = 1920,1080
-SCREEN_CENTER = (SCREEN_WIDTH/2,SCREEN_HEIGHT/2)
-total_coins = 0
-total_acorns = 0
+TILE_SIZE = 64      # The size of each tile in pixels.
+SCREEN_WIDTH,SCREEN_HEIGHT = 1920,1080      # The size of the screen in pixels.
+SCREEN_CENTER = (SCREEN_WIDTH/2,SCREEN_HEIGHT/2)        # The coordinates of the center of the screen.
+total_coins = 0     # Reseting the coin count.
+total_acorns = 0        # Reseting the acorn count.
+frame_count = 0
 # Booleans
 running = True      # Whether the main game loop should run or not.
-start_menu = True
+start_menu = True       # Whether ther start_menu should display.
 # Miscellaneous
 vector = pygame.math.Vector2        # Standardising vectors so I needn't retype "pygame.math.Vector2" each time I declare a vector.
-load = pygame.image.load
+load = pygame.image.load        # Standardising loading so I needn't retype "pygame.image.load" every time I wish to load an image.
 clock = pygame.time.Clock()     # Declaring the clock.
 map = map.map       # The tilemap.
 # Sprite groups
-player_group = pygame.sprite.Group()
+player_group = pygame.sprite.Group()        # Variable name speaks for itself.
 main_tile_group = pygame.sprite.Group()
 wood_tile_group = pygame.sprite.Group()
 coin_tile_group = pygame.sprite.Group()
 acorn_tile_group = pygame.sprite.Group()
+origin_tile_group = pygame.sprite.Group()
 # Images
-menu_background = load("assets/images/backgrounds/menu.png")
+menu_background = load("assets/images/backgrounds/full_logo.png")        # The menu bacground (scroll looking thing).
 # Fonts
-title_font = pygame.font.Font("assets/fonts/menu_font.ttf",60)
-title_font.set_underline(True)
-menu_font = pygame.font.Font("assets/fonts/menu_font.ttf",30)
+title_font = pygame.font.Font("assets/fonts/menu_font.ttf",60)      # The font for the game title.
+title_font.set_underline(True)      # Underlining the game title.
+menu_font = pygame.font.Font("assets/fonts/menu_font.ttf",30)       # The menu font (same as the title, just not underlined.)
 
 
 # ---- SETTING UP THE GAME WINDOW ---- #
@@ -57,33 +59,34 @@ pygame.display.set_caption(GAME_NAME)       # Setting the window caption to the 
 # ---- SUBROUTINES ---- #
 # ---- START MENU 
 def startup_menu():
-    root.blit(menu_background,(SCREEN_WIDTH/2 - 1120/2,SCREEN_HEIGHT/2 - 1120/2))
+    global frame_count
 
-    title_text = title_font.render(GAME_NAME,True,BLACK)
-    title_rect = title_text.get_rect()
-    root.blit(title_text,(SCREEN_WIDTH/2-30*6,300))
+    root.blit(menu_background,(0,0))        # Putting the menu background on the screen.
+
+
+    frame_count += 1
+
+
 
 
 def draw_stats(total_coins,player_coins,total_acorns,player_acorns):
-    global WHITE,BLACK,GOLD,BROWN
-
-    if player_coins == total_coins:
-        coins_text_colour = GOLD
+    if player_coins == total_coins:     # Checking if the player has collected all the coins.
+        coins_text_colour = GOLD        # Setting the coin stat colour to gold.
     else:
-        coins_text_colour = WHITE
-    coins_text_string = f"Coins: {player_coins}/{total_coins}"
-    coins_text = menu_font.render(coins_text_string,True,coins_text_colour)
-    pygame.draw.rect(root,BLACK,(0,0,len(coins_text_string)*16,34))
-    root.blit(coins_text,(0,2))
+        coins_text_colour = WHITE       # Setting the coin stat colour to white.
+    coins_text_string = f"Coins: {player_coins}/{total_coins}"      # Writing the coin stat string.
+    coins_text = menu_font.render(coins_text_string,True,coins_text_colour)     # Rendering the coin stat text.
+    pygame.draw.rect(root,BLACK,(0,0,len(coins_text_string)*16,34))      # Drawing the backdrop/highlight for the text to increase readability.
+    root.blit(coins_text,(0,2))     # Putting the coin text on the screen.
 
-    if player_acorns == total_acorns:
-        acorns_text_colour  = BROWN
+    if player_acorns == total_acorns:       # Checking if the player hs all the acorns.
+        acorns_text_colour  = BROWN     # Setting the acorn stat colour to brown.
     else:
-        acorns_text_colour = WHITE
-    acorns_text_string = f"Acorns: {player_acorns}/{total_acorns}"
-    acorns_text = menu_font.render(acorns_text_string,True,acorns_text_colour)
-    pygame.draw.rect(root,BLACK,(0,34,len(acorns_text_string)*16,34))
-    root.blit(acorns_text,(0,36))
+        acorns_text_colour = WHITE      # Setting the acorn stat colour to white.
+    acorns_text_string = f"Acorns: {player_acorns}/{total_acorns}"      # Writing the stat string.
+    acorns_text = menu_font.render(acorns_text_string,True,acorns_text_colour)      # Rendering the acorn stat text.
+    pygame.draw.rect(root,BLACK,(0,34,len(acorns_text_string)*16,34))       # Drawing the backdrop/highlight for the text to increase readability.
+    root.blit(acorns_text,(0,36))       # Putting the stat on the screen.
 
 
 # ---- CLASSES ---- #
@@ -94,22 +97,25 @@ class PLAYER(pygame.sprite.Sprite):
         super().__init__()
 
         # Image variables
-        self.image = load("assets/images/player/player_facing_right.png")
-        self.rect = self.image.get_rect()
-        self.rect.bottomleft = (x,y)
+        self.image = load("assets/images/player/player_facing_right.png")       # Loading the player image.
+        self.rect = self.image.get_rect()       # Getting the rect for the image.
+
+        self.start_x = x
+        self.start_y = y
+        self.rect.bottomleft = (x,y)        # Setting the position for the player.
 
         # Stats.
-        self.coins = 0
-        self.acorns = 0
+        self.coins = 0      # Player's coin count.
+        self.acorns = 0     # Player's acorn count.
 
         # Collision tiles.
-        self.coin_tiles = coin_tiles
-        self.collision_tiles = collision_tiles
-        self.on_platform = False
+        self.collision_tiles = collision_tiles      # The tiles that the player will collide with.
+        self.on_platform = False        # Whether the player is on  platform or not. True --> Not falling
+        self.dead = False
 
         # Kinematic variables
-        self.multiplier = 0
-        self.has_jump = True
+        self.multiplier = 0     # Multiplier for velocity.
+        self.has_jump = True        # Seeing  if the user can use a jump.
         self.position = vector(x,y)     # Position vector.
         self.velocity = vector(0,0)     # Velocity vector.
         self.acceleration = vector(0,0)     # Acceleration vector.
@@ -117,10 +123,12 @@ class PLAYER(pygame.sprite.Sprite):
         # Physics/kinematic constants
         self.HORIZONTAL_ACCELERATION = 2        # The acceleration of the player when moving left and right.
         self.FRICTION_COEFFICIENT = 0.1     # The coefficient of friction of the player.
-        self.GRAVITY = 0.2      # How much gravity effects the player.
+        self.GRAVITY = 0.25      # How much gravity effects the player.
 
     # Updating the player.
     def update(self):
+        self.dead = False
+
         if self.velocity.y <= 10:
             self.acceleration = vector(0,self.GRAVITY)     # Reseting the acceleration to fix bouncing bug.
         else:
@@ -142,7 +150,7 @@ class PLAYER(pygame.sprite.Sprite):
 
 
         # Kinematic movement equations.
-        self.acceleration.x = self.HORIZONTAL_ACCELERATION * self.multiplier
+        self.acceleration.x = self.HORIZONTAL_ACCELERATION * self.multiplier        # Setting the player's x acceleration.
 
         self.acceleration.x -= self.velocity.x * self.FRICTION_COEFFICIENT
         self.velocity += self.acceleration
@@ -156,7 +164,7 @@ class PLAYER(pygame.sprite.Sprite):
             self.position.x = 2000     # Putting the player off the screen on the far right.
             self.position.y -= 50       # To allow for smoother transportation.
 
-        self.rect.bottomright = self.position        # Setting the new position
+        self.rect.bottomright = self.position        # Setting the new position.
 
         # Checking if player collides with map.
         touched_tiles = pygame.sprite.spritecollide(self,self.collision_tiles,False)        # Making a list of all tiles that are touching the player.
@@ -167,37 +175,61 @@ class PLAYER(pygame.sprite.Sprite):
                 self.position.y = touched_tiles[0].rect.top 
                 self.velocity.y = 0
         else:
-            self.has_jump = False
+            self.has_jump = False       # Stopping the user from jumping on midair.
+
+        # Checking if the player is no longer on the screen.
+        if self.position.y < 0 or self.position.y > 1080 + 90:
+            self.reset()
+            self.dead = True
+
+    def reset(self):
+        self.acorns = 0 
+        self.coins = 0
+
+        self.acceleration = vector(0,0)
+        self.velocity = vector(0,0)
+
+        self.position = vector(self.start_x,self.start_y)
+        self.rect.bottomleft = self.position
+
+        
 
 
 
 # ---- TILE CLASS
 class TILE(pygame.sprite.Sprite):
     # Initialising the map.
-    def __init__(self,x,y,tile_int,main_group,sub_group,player_group):
+    def __init__(self,map,x,y,tile_int,main_group,sub_group,player_group,origin_group):
         super().__init__()
 
-        if tile_int == 1:
-            self.image = load("assets/images/tiles/wood_texture.png")
+        global original_tile_group
+
+        if tile_int == 1:       # If the tile is a platform.
+            self.image = load("assets/images/tiles/wood_texture.png")       # Loading the platform image.
             sub_group.add(self)
-        if tile_int == 2:
-            self.image = load("assets/images/tiles/tile_coin.png")
+            origin_group.add(self)
+        if tile_int == 2:       # If the tile is a coin.
+            self.image = load("assets/images/tiles/tile_coin.png")      # Loading the coin image.
             self.image = pygame.transform.scale(self.image,(32,32))
             sub_group.add(self)
-        if tile_int == 3:
-            self.image = load("assets/images/tiles/tile_acorn.png")
+            origin_group.add(self)
+        if tile_int == 3:       # If the tile is an acorn.
+            self.image = load("assets/images/tiles/tile_acorn.png")     # Loading the acorn image.
             self.image = pygame.transform.scale(self.image,(100,100))
             sub_group.add(self)
+            origin_group.add(self)
         
-        main_group.add(self)
+        main_group.add(self)        # Adding all tiles to the main group.
 
         self.tile_int = tile_int
 
         self.rect = self.image.get_rect()
         self.rect.topleft = (x,y)
+        self.start_x = x
+        self.start_y = y
 
         self.player_group = player_group
-
+    
         self.position = vector(x,y)
         if self.tile_int == 2:
             self.position += vector(16,8)
@@ -209,7 +241,7 @@ class TILE(pygame.sprite.Sprite):
         self.GRAVITY = 0.1
 
     
-    def update(self,main_tile_group,coin_tile_group):
+    def update(self,main_tile_group,origin_group):
         keys = pygame.key.get_pressed()
 
         if self.velocity.y <= -5:
@@ -228,27 +260,44 @@ class TILE(pygame.sprite.Sprite):
 
         if self.tile_int == 2:
             if pygame.sprite.spritecollide(self,self.player_group,False):
-                coin_tile_group.remove(self)
                 main_tile_group.remove(self)
+                origin_group.add(self)
                 player.coins += 1
        
         if self.tile_int == 3:
             if pygame.sprite.spritecollide(self,self.player_group,False):
-                acorn_tile_group.remove(self)
                 main_tile_group.remove(self)
+                origin_group.add(self)
                 player.acorns += 1
 
+        if player.dead:
+            self.reset()
+
+    def reset(self):
+
+        self.acceleration = vector(0,0)
+        self.velocity = vector(0,0)
+
+        self.position = vector(self.start_x,self.start_y)
+        self.rect.bottomleft = self.position
+
+        if self.tile_int == 2:
+            self.position += vector(16,8)
+        if self.tile_int == 3:
+            self.position -= vector(18,20)
+
+        
 
 # ---- MAKING THE MAP ---- #
 for row in range(len(map)):
     for col in range(len(map[row])):
         if map[row][col] == 1:
-            tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,wood_tile_group,player_group)
+            tile = TILE(map,col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,wood_tile_group,player_group,origin_tile_group)
         if map[row][col] == 2:
-            tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,coin_tile_group,player_group)
+            tile = TILE(map,col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,coin_tile_group,player_group,origin_tile_group)
             total_coins += 1
         if map[row][col] == 3:
-            tile = TILE(col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,acorn_tile_group,player_group)
+            tile = TILE(map,col*TILE_SIZE,row*TILE_SIZE,map[row][col],main_tile_group,acorn_tile_group,player_group,origin_tile_group)
             total_acorns += 1
         if map[row][col] == 9:
             player = PLAYER(col*TILE_SIZE,row*TILE_SIZE,wood_tile_group,coin_tile_group)
@@ -275,7 +324,7 @@ while running:
     else:
         delta_time = clock.tick(60)/100     # Declaring delta time.
 
-        main_tile_group.update(main_tile_group,coin_tile_group)        # Updating the tilemap
+        main_tile_group.update(main_tile_group,origin_tile_group)        # Updating the tilemap
         main_tile_group.draw(root)      # Drawing the tilemap.
 
         player_group.update()     # Updating the player class.

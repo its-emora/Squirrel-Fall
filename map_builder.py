@@ -8,6 +8,7 @@ pygame.init()
 
 BLACK = (0,0,0)
 BLUE = (0,0,255)
+GREEN = (0,255,0)
 WHITE = (255,255,255)
 GOLD = (255,215,0)
 BROWN = (150,75,0)
@@ -48,6 +49,16 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
+        if event.type == pygame.MOUSEWHEEL:
+            if event.y == -1:
+                if map_y > -400 * TILE_SIZE + 1080:
+                    map_y -= 46
+            if event.y == 1:
+                if map_y < 0:
+                    map_y += 46
+
+    if map_y < -400 * TILE_SIZE + 1080:
+        map_y = -400 * TILE_SIZE + 1080
 
     keys = pygame.key.get_pressed()
     mouse_pos = pygame.mouse.get_pos()
@@ -67,9 +78,12 @@ while running:
     if keys[pygame.K_c]:
         tile_type = 2
     if keys[pygame.K_x]:
-        tile_type = 3
+        tile_type = 3   
+    if keys[pygame.K_f]:
+        tile_type = 8
     if keys[pygame.K_t]:
         tile_type = 9
+    
     
 
     if keys[pygame.K_LCTRL] and keys[pygame.K_r]:
@@ -88,6 +102,10 @@ while running:
             if map[row][col] == 3:
                 pygame.draw.rect(root,BROWN,(col*TILE_SIZE,row*TILE_SIZE+map_y,TILE_SIZE, TILE_SIZE))
                 acorn_count += 1
+            if map[row][col] == 8:
+                pygame.draw.rect(root,GREEN,(col*TILE_SIZE,row*TILE_SIZE+map_y,TILE_SIZE, TILE_SIZE))
+                spawns_count += 1
+                spawn_placed = True
             if map[row][col] == 9:
                 pygame.draw.rect(root,BLUE,(col*TILE_SIZE,row*TILE_SIZE+map_y,TILE_SIZE, TILE_SIZE))
                 spawns_count += 1
