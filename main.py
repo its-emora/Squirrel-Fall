@@ -60,12 +60,9 @@ pygame.display.set_caption(GAME_NAME)       # Setting the window caption to the 
 # ---- SUBROUTINES ---- #
 # ---- START MENU 
 def startup_menu():
-    global frame_count
-
     root.blit(menu_background,(0,0))        # Putting the menu background on the screen.
 
-
-    frame_count += 1
+    prompt_text = menu_font.render("Press P to Play",True,BLACK)
 
 
 
@@ -270,7 +267,7 @@ class TILE(pygame.sprite.Sprite):
                 player.acorns += 1
 
         if self.tile_int == 8:
-            if pygame.sprite.spritecollide(self,self.player_group,False)
+            if pygame.sprite.spritecollide(self,self.player_group,False):
                 finish_menu = True
 
         if player.dead:
