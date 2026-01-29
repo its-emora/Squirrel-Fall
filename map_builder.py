@@ -83,8 +83,6 @@ while running:
         tile_type = 8
     if keys[pygame.K_t]:
         tile_type = 9
-    
-    
 
     if keys[pygame.K_LCTRL] and keys[pygame.K_r]:
         for row in range(len(map)):
@@ -104,8 +102,6 @@ while running:
                 acorn_count += 1
             if map[row][col] == 8:
                 pygame.draw.rect(root,GREEN,(col*TILE_SIZE,row*TILE_SIZE+map_y,TILE_SIZE, TILE_SIZE))
-                spawns_count += 1
-                spawn_placed = True
             if map[row][col] == 9:
                 pygame.draw.rect(root,BLUE,(col*TILE_SIZE,row*TILE_SIZE+map_y,TILE_SIZE, TILE_SIZE))
                 spawns_count += 1

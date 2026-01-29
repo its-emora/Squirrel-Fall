@@ -45,7 +45,8 @@ coin_tile_group = pygame.sprite.Group()
 acorn_tile_group = pygame.sprite.Group()
 finish_tile_group = pygame.sprite.Group()
 # Images
-menu_background = load("assets/images/backgrounds/full_logo.png")        # The menu bacground (scroll looking thing).
+menu_logo = load("assets/images/backgrounds/full_logo.png")        # The menu bacground (scroll looking thing).
+menu_background = load("assets/images/backgrounds/menu.png")
 # Fonts
 title_font = pygame.font.Font("assets/fonts/menu_font.ttf",60)      # The font for the game title.
 title_font.set_underline(True)      # Underlining the game title.
@@ -60,11 +61,30 @@ pygame.display.set_caption(GAME_NAME)       # Setting the window caption to the 
 # ---- SUBROUTINES ---- #
 # ---- START MENU 
 def startup_menu():
-    root.blit(menu_background,(0,0))        # Putting the menu background on the screen.
+    root.blit(menu_logo,(0,0))        # Putting the menu background on the screen.
 
     prompt_text = menu_font.render("Press P to Play",True,BLACK)
+    root.blit(prompt_text,(5,5))
 
 
+def end_menu(total_coins,player_coins,total_acorns,player_acorns):
+    root.blit(menu_background,(400,0))
+
+    if player_coins == total_coins:     # Checking if the player has collected all the coins.
+        coins_text_colour = GOLD        # Setting the coin stat colour to gold.
+    else:
+        coins_text_colour = WHITE       # Setting the coin stat colour to white.
+    coins_text_string = f"Coins: {player_coins}/{total_coins}"      # Writing the coin stat string.
+    coins_text = menu_font.render(coins_text_string,True,coins_text_colour)     # Rendering the coin stat text.
+    root.blit(coins_text,(SCREEN_WIDTH/2-75,400))     # Putting the coin text on the screen.
+
+    if player_acorns == total_acorns:       # Checking if the player hs all the acorns.
+        acorns_text_colour  = BROWN     # Setting the acorn stat colour to brown.
+    else:
+        acorns_text_colour = WHITE      # Setting the acorn stat colour to white.
+    acorns_text_string = f"Acorns: {player_acorns}/{total_acorns}"      # Writing the stat string.
+    acorns_text = menu_font.render(acorns_text_string,True,acorns_text_colour)      # Rendering the acorn stat text.p
+    root.blit(acorns_text,(SCREEN_WIDTH/2-75,550))       # Putting the stat on the screen.
 
 
 def draw_stats(total_coins,player_coins,total_acorns,player_acorns):
@@ -189,9 +209,6 @@ class PLAYER(pygame.sprite.Sprite):
 
         self.position = vector(self.start_x,self.start_y)
         self.rect.bottomleft = self.position
-
-        
-
 
 
 # ---- TILE CLASS
@@ -324,7 +341,7 @@ while running:
         if keys[pygame.K_p]:
             start_menu = False
     elif finish_menu:
-        pass
+        end_menu(total_coins,player.coins,total_acorns,player.acorns)
     else:
         delta_time = clock.tick(60)/100     # Declaring delta time.
 
